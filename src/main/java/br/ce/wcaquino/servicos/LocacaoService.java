@@ -12,8 +12,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class LocacaoService {
-	
-	public Locacao alugarFilme(Usuario usuario, Filme filme) {
+	// throw Exception espera a exceção, utilizado na estrutura de try catch
+	public Locacao alugarFilme(Usuario usuario, Filme filme) throws Exception {
+		if(filme.getEstoque() == 0 ){
+			throw new Exception("Filme sem estoque!");
+		}
+
+
 		Locacao locacao = new Locacao();
 		locacao.setFilme(filme);
 		locacao.setUsuario(usuario);

@@ -1,6 +1,5 @@
 package br.ce.wcaquino.servicos;
 
-import br.ce.wcaquino.builders.LocacaoBuilder;
 import br.ce.wcaquino.daos.LocacaoDAO;
 import br.ce.wcaquino.entidades.Filme;
 import br.ce.wcaquino.entidades.Locacao;
@@ -24,9 +23,7 @@ import static br.ce.wcaquino.builders.FilmeBuilder.umFilmeSemEstoque;
 import static br.ce.wcaquino.builders.LocacaoBuilder.umLocacao;
 import static br.ce.wcaquino.builders.UsuarioBuilder.umUsuario;
 import static br.ce.wcaquino.matchers.MatchesProprios.*;
-import static br.ce.wcaquino.utils.DataUtils.obterDataComDiferencaDias;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class LocacaoServiceTest {
     private LocacaoService service;
@@ -129,8 +126,8 @@ public class LocacaoServiceTest {
         // cenario
         Usuario usuario = umUsuario().agora();
         List<Filme> filmes = Arrays.asList(umFilme().agora());
-        
-        when(spc.possuiNegativacao(usuario)).thenReturn(true);
+
+        when(spc.possuiNegativacao(Mockito.any(Usuario.class))).thenReturn(true);
 
         // acao
         try {
@@ -148,17 +145,36 @@ public class LocacaoServiceTest {
     public void deveEnviarEmailParaLocacoesAtrasadas(){
         // cenario
         Usuario usuario = umUsuario().agora();
+        Usuario usuario2 = umUsuario().comNome("Usuario em dia").agora();
+        Usuario usuario3 = umUsuario().comNome("Outro Atrasado").agora();
+
         List<Locacao> locacoes = Arrays.asList(
-                umLocacao()
-                        .comUsuario(usuario)
-                        .comDataRetorno(obterDataComDiferencaDias(-2))
-                        .agora());
+                umLocacao().atrasada().comUsuario(usuario).agora(),
+                umLocacao().comUsuario(usuario2).agora(),
+                umLocacao().atrasada().comUsuario(usuario3).agora(),
+                umLocacao().atrasada().comUsuario(usuario3).agora());
         when(dao.obterLocacoesPendentes()).thenReturn(locacoes);
 
         // acao
         service.notificarAtrasos();
 
         // verificacao
-        verify(email).notificarAtraso(usuario);
+        verify(email, times(3)).notificarAtraso(Mockito.any(Usuario.class));
+
+        // Escolhe apenas uma invocação:
+         verify(email, atLeastOnce()).notificarAtraso(usuario3);
+
+        // Escolhe o minimo de invocações:
+        // verify(email, atLeast(2)).notificarAtraso(usuario3);
+
+        // Escolhe o maximo de invocações:
+        // verify(email, atMost(5)).notificarAtraso(usuario3);
+
+        // Escolhe o numero de invocações:
+        // verify(email, times(2)).notificarAtraso(usuario3);
+
+        verify(email, never()).notificarAtraso(usuario2);
+        verifyNoMoreInteractions(email);
+        verifyZeroInteractions(spc);
     }
 }

@@ -12,7 +12,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.Mockito;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,7 +24,14 @@ import static br.ce.wcaquino.builders.FilmeBuilder.umFilme;
 
 @RunWith(Parameterized.class) //Data Driven Test
 public class CalculoValorLocacaoTest {
+    @InjectMocks
     public LocacaoService service;
+
+    @Mock
+    private LocacaoDAO dao;
+
+    @Mock
+    public SPCService spc;
 
     @Parameterized.Parameter
     public List<Filme> filmes;
@@ -35,11 +44,7 @@ public class CalculoValorLocacaoTest {
 
     @Before
     public void setup(){
-        service = new LocacaoService();
-        LocacaoDAO dao = Mockito.mock(LocacaoDAO.class);
-        service.setLocacaoDAO(dao);
-        SPCService spc = Mockito.mock(SPCService.class);
-        service.setSpcService(spc);
+        MockitoAnnotations.initMocks(this);
     }
 
     private static final Filme filme1 = umFilme().agora();
